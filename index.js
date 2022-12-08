@@ -4,65 +4,66 @@ import {stdin as input, stdout as output} from 'node:process'
 
 const rl = readline.createInterface({input, output})
 const PROMPT_QUESTION = 'Number of AC task: '
+
 async function listenForTask() {
-    const task = await rl.question(PROMPT_QUESTION)
+  const task = await rl.question(PROMPT_QUESTION)
 
-    const data = await getTaskData(task)
-    const solvers = await getSolver(task)
+  const data = await getTaskData(task)
+  const solvers = await getSolver(task)
 
-    const results = solveTask(data, solvers)
+  const results = solveTask(data, solvers)
 
-    displayResults(results)
+  displayResults(results)
 }
 
 function solveTask(data, solvers) {
-    const {solveTask, solveExtended} = solvers
-    const results = {result: null, extended: null}
+  const {solveTask, solveExtended} = solvers
+  const results = {result: null, extended: null}
 
-    if (solveTask) {
-        results.result = solveTask(data)
-    }
+  if (solveTask) {
+    results.result = solveTask(data)
+  }
 
-    if (solveExtended) {
-        results.extended = solveExtended(data)
-    }
+  if (solveExtended) {
+    results.extended = solveExtended(data)
+  }
 
-    return results;
+  return results;
 }
 
 function displayResults({result, extended}) {
-    if (result) console.log(`Task result: ${result}`)
-    if (extended) console.log(`Part two result: ${extended}`)
+  if (result) console.log(`Task result: ${result}`)
+  if (extended) console.log(`Part two result: ${extended}`)
 }
 
 
 while (true) {
-    try {
-        await listenForTask()
-    } catch (e) {
-        console.error(e)
-    }
+  try {
+    await listenForTask()
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 async function getTaskData(taskNumber) {
-    try {
-        const path = `./data/${taskNumber}.txt`
-        return await fs.readFile(path, {encoding: 'utf-8'})
-    } catch (e) {
-        throw new Error('No data for this task')
-    }
+  try {
+    const path = `./data/${taskNumber}.txt`
+    return await fs.readFile(path, {encoding: 'utf-8'})
+  } catch (e) {
+    throw new Error('No data for this task')
+  }
 }
 
 
 async function getSolver(taskNumber) {
-    try {
-        const solverPath = `./${taskNumber}.js`
-        const solver = await import(solverPath)
+  try {
+    const solverPath = `./${taskNumber}.js`
+    const solver = await import(solverPath)
 
-        if (!solver) throw new Error('No solver for the task')
+    if (!solver) throw new Error('No solver for the task')
 
-        return solver
-    } catch (e) {
-        throw new Error(`Error while executing solver - ${e.message}`)
-    }
+    return solver
+  } catch (e) {
+    throw new Error(`Error while executing solver - ${e.message}`)
+  }
 }
