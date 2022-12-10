@@ -13,52 +13,105 @@ const directions = {
   L: [-1, 0]
 }
 
-function checkIfShouldMoveTail([x1, y1], [x2, y2]) {
-  const dx = Math.abs(x1 - x2)
-  const dy = Math.abs(y1 - y2)
+function getDiff([x1, y1], [x2, y2]) {
+  const dx = x2 - x1
+  const dy = y2 - y1
 
-  return dx >= 2 || dy >= 2
+  return [dx, dy]
 }
 
-function getCoordsString([x, y]) {
+function getMiddleCords([x1, y1], [x2, y2]) {
+  return [(x1 + x2) / 2, (y1 + y2) / 2]
+}
+
+function serializePosition([x, y]) {
   return `${x};${y}`
 }
 
-const START = [0, 0]
+const START = [12, 6]
 
-function simulateMotions(motions) {
-  let headPosition = START
-  let tailPosition = START
+function createRope(length) {
+  return [...new Array(length)].map(() => START)
+}
 
-  const visited = new Set([getCoordsString(tailPosition)])
-
-  for (const [direction, count] of motions) {
-    const [dx, dy] = directions[direction]
-
-    for (let i = 0; i < count; i++) {
-      const [x, y] = headPosition
-      headPosition = [x + dx, y + dy]
-
-      const shouldMoveTail = checkIfShouldMoveTail(tailPosition, headPosition)
-
-      if (shouldMoveTail) {
-        tailPosition = [x, y]
-      }
-
-      visited.add(getCoordsString(tailPosition))
-    }
+function moveRope(rope, motions) {
+  const visited = new Set([serializePosition(START)])
+  const savePosition = (coords) => {
+    visited.add(serializePosition(coords))
+  }
+  const updateHead = ([dx, dy]) => {
+    const [x, y] = rope[0]
+    rope[0] = [x + dx, y + dy]
   }
 
+  const moveTailToHead = (knotIdx = 1) => {
+    const prev = rope[knotIdx - 1]
+    const current = rope[knotIdx]
+
+    const isLast = knotIdx === rope.length - 1
+
+    const [dx, dy] = getDiff(current, prev)
+    const shouldMove = Math.abs(dx) >= 2 || Math.abs(dy) >= 2
+
+    const oneOf = (a, b) => {
+      return Math.abs(dx) === a && Math.abs(dy) === b || Math.abs(dy) === a && Math.abs(dx) === b
+    }
+
+    if (shouldMove) {
+      let newPosition
+      const [x, y] = current
+
+      if (oneOf(0, 2)) {1
+        newPosition = getMiddleCords(prev, current)
+      }
+
+      if (oneOf(1, 2)) {
+        if (Math.abs(dx) > Math.abs(dy)) {
+          newPosition = [x + dx / 2, y + dy]
+        } else {
+          newPosition = [x + dx, y + dy / 2]
+        }
+      }
+
+      if (Math.abs(dx) === 2 && Math.abs(dy) === 2) {
+        newPosition = [x + dx / 2, y + dy / 2]
+      }
+
+      rope[knotIdx] = newPosition
+    }
+
+    if (!isLast) moveTailToHead(knotIdx + 1)
+  }
+
+  for (const [direction, count] of motions) {
+    const diff = directions[direction]
+
+    for (let i = 0; i < count; i++) {
+      updateHead(diff)
+      moveTailToHead()
+      savePosition(rope.at(-1))
+    }
+  }
   return visited
 }
 
 function solveTask(data) {
   const motions = prepareData(data)
-  const visitedPositions = simulateMotions(motions)
 
+  const rope = createRope(2)
+  const visitedPositions = moveRope(rope, motions)
+  return visitedPositions.size
+}
+
+function solveExtended(data) {
+  const motions = prepareData(data)
+  const rope = createRope(10)
+
+  const visitedPositions = moveRope(rope, motions)
   return visitedPositions.size
 }
 
 export {
-  solveTask
+  solveTask,
+  solveExtended
 }

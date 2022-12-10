@@ -3,7 +3,7 @@ import fs from "fs/promises";
 function getArguments() {
   const [, , type, taskNumber] = process.argv
   const getValue = (arg) => arg.split(':')[1]
-  return [getValue(type), getValue(taskNumber)]
+  return [getValue(type), Number(taskNumber)]
 }
 
 function solveTask(data, solvers) {
@@ -38,11 +38,7 @@ async function getTaskData(taskNumber, type = 'prod') {
 async function getSolver(taskNumber) {
   try {
     const solverPath = `./${taskNumber}/${taskNumber}.js`
-    const solver = await import(solverPath)
-
-    if (!solver) throw new Error('No solver for the task')
-
-    return solver
+    return await import(solverPath)
   } catch (e) {
     throw new Error(`Error while executing solver - ${e.message}`)
   }
@@ -51,8 +47,8 @@ async function getSolver(taskNumber) {
 try {
   const [type, task] = getArguments()
 
-  const data = await getTaskData(task, type)
   const solvers = await getSolver(task)
+  const data = await getTaskData(task, type)
 
   const results = solveTask(data, solvers)
 
